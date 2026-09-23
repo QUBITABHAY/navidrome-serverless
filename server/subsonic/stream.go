@@ -41,7 +41,7 @@ func (api *Router) Stream(w http.ResponseWriter, r *http.Request) (*responses.Su
 	if (streamReq.Format == "raw" || streamReq.Format == "" || streamReq.Format == mf.Suffix) && r2.IsR2Path(mf.Path) {
 		if r2URL, err := r2.PresignGet(ctx, mf.Path, 2*time.Hour); err == nil && r2URL != "" {
 			log.Info(ctx, "Redirecting Subsonic stream to R2 presigned URL", "id", id, "title", mf.Title)
-			http.Redirect(w, r, r2URL, http.StatusFound)
+			http.Redirect(w, r, r2URL, http.StatusFound) //nolint:gosec // URL is generated server-side by S3 presigner
 			return nil, nil
 		}
 	}
@@ -120,7 +120,7 @@ func (api *Router) Download(w http.ResponseWriter, r *http.Request) (*responses.
 		if (streamReq.Format == "raw" || streamReq.Format == "" || streamReq.Format == v.Suffix) && r2.IsR2Path(v.Path) {
 			if r2URL, err := r2.PresignGet(ctx, v.Path, 2*time.Hour); err == nil && r2URL != "" {
 				log.Info(ctx, "Redirecting Subsonic download to R2 presigned URL", "id", id, "title", v.Title)
-				http.Redirect(w, r, r2URL, http.StatusFound)
+				http.Redirect(w, r, r2URL, http.StatusFound) //nolint:gosec // URL is generated server-side by S3 presigner
 				return nil, nil
 			}
 		}
