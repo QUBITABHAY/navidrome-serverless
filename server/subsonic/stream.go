@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/navidrome/navidrome/conf"
+	"github.com/navidrome/navidrome/core/storage/r2"
 	"github.com/navidrome/navidrome/core/stream"
 	"github.com/navidrome/navidrome/log"
 	"github.com/navidrome/navidrome/model"
@@ -34,6 +36,16 @@ func (api *Router) Stream(w http.ResponseWriter, r *http.Request) (*responses.Su
 	}
 
 	streamReq := api.transcodeDecision.ResolveRequest(ctx, mf, format, maxBitRate, timeOffset)
+
+	// If streaming raw audio and R2 presigned streaming is available, redirect directly to Cloudflare R2
+	if (streamReq.Format == "raw" || streamReq.Format == "" || streamReq.Format == mf.Suffix) && r2.IsR2Path(mf.Path) {
+		if r2URL, err := r2.PresignGet(ctx, mf.Path, 2*time.Hour); err == nil && r2URL != "" {
+			log.Info(ctx, "Redirecting Subsonic stream to R2 presigned URL", "id", id, "title", mf.Title)
+			http.Redirect(w, r, r2URL, http.StatusFound)
+			return nil, nil
+		}
+	}
+
 	stream, err := api.streamer.NewStream(ctx, mf, streamReq)
 	if err != nil {
 		return nil, err
@@ -103,6 +115,16 @@ func (api *Router) Download(w http.ResponseWriter, r *http.Request) (*responses.
 	switch v := entity.(type) {
 	case *model.MediaFile:
 		streamReq := api.transcodeDecision.ResolveRequest(ctx, v, format, maxBitRate, 0)
+
+		// If downloading raw audio and file is in R2, redirect directly to Cloudflare R2
+		if (streamReq.Format == "raw" || streamReq.Format == "" || streamReq.Format == v.Suffix) && r2.IsR2Path(v.Path) {
+			if r2URL, err := r2.PresignGet(ctx, v.Path, 2*time.Hour); err == nil && r2URL != "" {
+				log.Info(ctx, "Redirecting Subsonic download to R2 presigned URL", "id", id, "title", v.Title)
+				http.Redirect(w, r, r2URL, http.StatusFound)
+				return nil, nil
+			}
+		}
+
 		stream, err := api.streamer.NewStream(ctx, v, streamReq)
 		if err != nil {
 			return nil, err

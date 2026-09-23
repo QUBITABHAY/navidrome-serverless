@@ -126,6 +126,7 @@ type configOptions struct {
 	Deezer                          deezerOptions       `json:",omitzero"`
 	ListenBrainz                    listenBrainzOptions `json:",omitzero"`
 	Jellyfin                        jellyfinOptions     `json:",omitzero"`
+	R2                              r2Options           `json:",omitzero"`
 	EnableScrobbleHistory           bool
 	Tags                            map[string]TagConf `json:",omitempty"`
 	Agents                          string
@@ -302,6 +303,17 @@ type searchOptions struct {
 type matcherOptions struct {
 	PreferStarred  bool
 	FuzzyThreshold int
+}
+
+type r2Options struct {
+	AccountID             string
+	AccessKeyID           string
+	SecretAccessKey       string
+	Bucket                string
+	PublicURL             string
+	Endpoint              string
+	Region                string
+	EnablePresignedStream bool
 }
 
 // logFatal prints a fatal error message to stderr and exits.
