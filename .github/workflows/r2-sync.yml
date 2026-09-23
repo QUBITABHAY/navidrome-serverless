@@ -8,17 +8,39 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    environment: Production
     steps:
-      - name: Checkout Code
+      - name: Trigger Navidrome Webhook Scan
+        env:
+          SCAN_SECRET: ${{ secrets.ND_SCAN_SECRET }}
+        run: |
+          echo "Triggering on-demand R2 library scan on Vercel..."
+          response=$(curl -s -w "\n%{http_code}" -X POST "https://navidrome-serverless.vercel.app/api/scan/r2?secret=${SCAN_SECRET}")
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          echo "Response: $body"
+          if [ "$http_code" -eq 200 ]; then
+            echo "Library scan completed successfully!"
+            exit 0
+          fi
+          echo "Webhook returned status $http_code. Proceeding to CLI fallback..."
+          exit 1
+        continue-on-error: true
+        id: webhook_scan
+
+      - name: Checkout Code (CLI Fallback)
+        if: steps.webhook_scan.outcome == 'failure'
         uses: actions/checkout@v7
 
-      - name: Setup Go
+      - name: Setup Go (CLI Fallback)
+        if: steps.webhook_scan.outcome == 'failure'
         uses: actions/setup-go@v7
         with:
           go-version: "1.27"
           cache: true
 
-      - name: Run R2 Sync
+      - name: Run CLI Scan (Fallback)
+        if: steps.webhook_scan.outcome == 'failure'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           ND_R2_ACCOUNTID: ${{ secrets.ND_R2_ACCOUNTID }}

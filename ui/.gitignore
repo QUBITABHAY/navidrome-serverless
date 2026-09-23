@@ -1,7 +1,7 @@
 node_modules
 .eslintcache
 
-build/*
-!build/.gitkeep
+# build is tracked so serverless binary embeds web UI assets
+
 /coverage/
 public/3rdparty/workbox
