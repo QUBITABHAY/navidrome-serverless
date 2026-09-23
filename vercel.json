@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.go",
+      "use": "@vercel/go"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/rest/(.*)",
+      "dest": "/api/index.go"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.go"
+    },
+    {
+      "src": "/auth/(.*)",
+      "dest": "/api/index.go"
+    },
+    {
+      "src": "/share/(.*)",
+      "dest": "/api/index.go"
+    },
+    {
+      "src": "/app/(.*)",
+      "dest": "/api/index.go"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.go"
+    }
+  ],
+  "env": {
+    "ND_BASEURL": "",
+    "ND_SESSIONTIMEOUT": "24h"
+  }
+}

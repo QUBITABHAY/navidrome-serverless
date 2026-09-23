@@ -55,6 +55,16 @@ func (s *Server) MountRouter(description, urlPath string, subRouter http.Handler
 	})
 }
 
+// ServeHTTP satisfies http.Handler for serverless runtimes like Vercel
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.router.ServeHTTP(w, r)
+}
+
+// MountWebUI mounts the embedded frontend web UI assets
+func (s *Server) MountWebUI() {
+	s.MountRouter("WebUI", consts.URLPathUI, s.frontendAssetsHandler())
+}
+
 // Run starts the server with the given address, and if specified, with TLS enabled.
 func (s *Server) Run(ctx context.Context, addr string, port int, tlsCert string, tlsKey string) error {
 	// Mount the router for the frontend assets
