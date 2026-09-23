@@ -2,11 +2,6 @@
 
 # Navidrome Serverless 🚀
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
-[![GitHub License](https://img.shields.io/github/license/QUBITABHAY/navidrome-serverless?style=flat-square)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/QUBITABHAY/navidrome-serverless)](https://goreportcard.com/report/github.com/QUBITABHAY/navidrome-serverless)
-[![Subsonic API Compatibility](https://img.shields.io/badge/Subsonic%20API-v1.16.1-blue?style=flat-square)](https://www.navidrome.org/docs/developers/subsonic-api/)
-
 **Navidrome Serverless** is a cloud-native, serverless distribution of [Navidrome](https://www.navidrome.org). It is re-architected to run entirely on **100% free-tier services**—deployed as serverless functions on **Vercel**, backed by any **Serverless or Managed PostgreSQL** database, and streaming audio directly from **Cloudflare R2** / AWS S3.
 
 > [!NOTE]
@@ -18,14 +13,14 @@
 
 Standard Navidrome is designed for persistent virtual machines or home servers with a local filesystem and SQLite database. **Navidrome Serverless** adapts the core architecture for stateless, ephemeral environments:
 
-| Feature | Standard Navidrome | Navidrome Serverless |
-| :--- | :--- | :--- |
-| **Hosting** | VPS, Docker, Raspberry Pi | **Vercel Serverless Functions** (or AWS Lambda) |
-| **Database** | Local SQLite (`navidrome.db`) | **External / Serverless PostgreSQL** via type-safe [`sqlc`](https://sqlc.dev) & `pgx/v5` connection pooling |
-| **Audio Storage** | Local hard drive / NFS / SMB | **Cloudflare R2** or AWS S3 Object Storage |
-| **Streaming Delivery** | Server proxies all audio chunks | **Direct HTTP 302 Presigned Streaming** from Cloudflare Edge CDN ($0 egress, zero function timeouts) |
-| **Library Scanner** | Long-running background daemon | **On-demand Webhook**, automated **GitHub Actions Cron**, or local CLI (`scan-r2`) |
-| **Client Compatibility** | Subsonic API + Web UI | **100% Identical** (Symfonium, Substreamer, Feishin, DSub, Web UI, etc.) |
+| Feature                  | Standard Navidrome              | Navidrome Serverless                                                                                        |
+| :----------------------- | :------------------------------ | :---------------------------------------------------------------------------------------------------------- |
+| **Hosting**              | VPS, Docker, Raspberry Pi       | **Vercel Serverless Functions** (or AWS Lambda)                                                             |
+| **Database**             | Local SQLite (`navidrome.db`)   | **External / Serverless PostgreSQL** via type-safe [`sqlc`](https://sqlc.dev) & `pgx/v5` connection pooling |
+| **Audio Storage**        | Local hard drive / NFS / SMB    | **Cloudflare R2** or AWS S3 Object Storage                                                                  |
+| **Streaming Delivery**   | Server proxies all audio chunks | **Direct HTTP 302 Presigned Streaming** from Cloudflare Edge CDN ($0 egress, zero function timeouts)        |
+| **Library Scanner**      | Long-running background daemon  | **On-demand Webhook**, automated **GitHub Actions Cron**, or local CLI (`scan-r2`)                          |
+| **Client Compatibility** | Subsonic API + Web UI           | **100% Identical** (Symfonium, Substreamer, Feishin, DSub, Web UI, etc.)                                    |
 
 ---
 
@@ -54,10 +49,10 @@ flowchart TD
 
 Navidrome Serverless implements the standard Subsonic API (v1.16.1) and is fully compatible with any Subsonic client across all platforms:
 
-* **Web Browser**: Built-in responsive React / Material UI web player (`https://your-domain.vercel.app/app`)
-* **iOS (iPhone, iPad, CarPlay)**: [Substreamer](https://substreamer.app/), [Amplefor](https://amplefor.com/), [play:Sub](https://playsub.app/)
-* **Android (Auto, WearOS)**: [Symfonium](https://symfonium.app/), [DSub](https://github.com/daneren200/navidrome-dsub)
-* **macOS / Windows / Linux**: [Feishin](https://github.com/jeffvli/feishin), [Supersonic](https://github.com/dweomer/supersonic)
+- **Web Browser**: Built-in responsive React / Material UI web player (`https://your-domain.vercel.app/app`)
+- **iOS (iPhone, iPad, CarPlay)**: [Substreamer](https://substreamer.app/), [Amplefor](https://amplefor.com/), [play:Sub](https://playsub.app/)
+- **Android (Auto, WearOS)**: [Symfonium](https://symfonium.app/), [DSub](https://github.com/daneren200/navidrome-dsub)
+- **macOS / Windows / Linux**: [Feishin](https://github.com/jeffvli/feishin), [Supersonic](https://github.com/dweomer/supersonic)
 
 ---
 
@@ -66,6 +61,7 @@ Navidrome Serverless implements the standard Subsonic API (v1.16.1) and is fully
 For detailed step-by-step instructions, see the complete [**Deployment Guide (DEPLOYMENT.md)**](DEPLOYMENT.md).
 
 ### 1. Set up PostgreSQL
+
 1. Create a PostgreSQL database using any provider of your choice (e.g. Neon, Supabase, Tembo, Aiven, or self-hosted).
 2. Apply the consolidated PostgreSQL schema:
    ```bash
@@ -73,30 +69,34 @@ For detailed step-by-step instructions, see the complete [**Deployment Guide (DE
    ```
 
 ### 2. Set up Cloudflare R2 (or AWS S3)
+
 1. Create an R2 bucket in the Cloudflare Dashboard (e.g., `my-music`).
 2. Generate an R2 API token with **Object Read & Write** permissions.
 3. Upload your music folders into the bucket.
 
 ### 3. Deploy to Vercel
+
 1. Import your GitHub repository to [Vercel](https://vercel.com).
 2. Configure the following environment variables:
-   * `DATABASE_URL`: `postgres://user:password@hostname:5432/dbname?sslmode=require`
-   * `ND_R2_ACCOUNTID`: Your Cloudflare Account ID
-   * `ND_R2_ACCESSKEYID`: Your Cloudflare R2 Access Key ID
-   * `ND_R2_SECRETACCESSKEY`: Your Cloudflare R2 Secret Access Key
-   * `ND_R2_BUCKET`: Your bucket name (e.g. `my-music`)
-   * `ND_R2_ENABLEPRESIGNEDSTREAM`: `true`
-   * `ND_SCAN_SECRET`: Secret token for webhook scans
+   - `DATABASE_URL`: `postgres://user:password@hostname:5432/dbname?sslmode=require`
+   - `ND_R2_ACCOUNTID`: Your Cloudflare Account ID
+   - `ND_R2_ACCESSKEYID`: Your Cloudflare R2 Access Key ID
+   - `ND_R2_SECRETACCESSKEY`: Your Cloudflare R2 Secret Access Key
+   - `ND_R2_BUCKET`: Your bucket name (e.g. `my-music`)
+   - `ND_R2_ENABLEPRESIGNEDSTREAM`: `true`
+   - `ND_SCAN_SECRET`: Secret token for webhook scans
 3. Click **Deploy**.
 
 ### 4. Index Your Music Library
+
 You can trigger metadata extraction in 3 convenient ways:
-* **Automated Cron**: Included GitHub Actions workflow ([`.github/workflows/r2-sync.yml`](.github/workflows/r2-sync.yml)) scans every 6 hours automatically.
-* **On-Demand Webhook**:
+
+- **Automated Cron**: Included GitHub Actions workflow ([`.github/workflows/r2-sync.yml`](.github/workflows/r2-sync.yml)) scans every 6 hours automatically.
+- **On-Demand Webhook**:
   ```bash
   curl -X POST "https://your-app.vercel.app/api/scan/r2?secret=YOUR_ND_SCAN_SECRET"
   ```
-* **Local CLI**:
+- **Local CLI**:
   ```bash
   go run main.go scan-r2
   ```
@@ -124,8 +124,8 @@ sqlc generate
 
 ## 📜 Credits & Acknowledgements
 
-* Original [Navidrome](https://github.com/navidrome/navidrome) project created and maintained by [Deluan Quintao](https://github.com/deluan) and contributors.
-* Navidrome Serverless maintains Subsonic API specification compatibility while decoupling compute, database, and storage for modern cloud architectures.
+- Original [Navidrome](https://github.com/navidrome/navidrome) project created and maintained by [Deluan Quintao](https://github.com/deluan) and contributors.
+- Navidrome Serverless maintains Subsonic API specification compatibility while decoupling compute, database, and storage for modern cloud architectures.
 
 ---
 
