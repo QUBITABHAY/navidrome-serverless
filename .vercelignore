@@ -1,0 +1,21 @@
+# Dependencies & caches
+ui/node_modules
+.cache
+tmp
+binaries
+bin
+dist
+
+# Media & local dev files
+music
+*.zip
+*.tar.gz
+*.db
+*.log
+
+# Build & CI tools
+release
+.github
+docs
+.vscode
+.idea
