@@ -3,6 +3,7 @@ package r2
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 
@@ -41,6 +42,24 @@ func ConfigFromGlobal() Config {
 		Endpoint:        conf.Server.R2.Endpoint,
 		Region:          conf.Server.R2.Region,
 		PublicURL:       conf.Server.R2.PublicURL,
+	}
+	if cfg.Bucket == "" {
+		cfg.Bucket = os.Getenv("ND_R2_BUCKET")
+	}
+	if cfg.AccountID == "" {
+		cfg.AccountID = os.Getenv("ND_R2_ACCOUNTID")
+	}
+	if cfg.AccessKeyID == "" {
+		cfg.AccessKeyID = os.Getenv("ND_R2_ACCESSKEYID")
+	}
+	if cfg.SecretAccessKey == "" {
+		cfg.SecretAccessKey = os.Getenv("ND_R2_SECRETACCESSKEY")
+	}
+	if cfg.Endpoint == "" {
+		cfg.Endpoint = os.Getenv("ND_R2_ENDPOINT")
+	}
+	if cfg.PublicURL == "" {
+		cfg.PublicURL = os.Getenv("ND_R2_PUBLICURL")
 	}
 	if cfg.Region == "" {
 		cfg.Region = "auto"

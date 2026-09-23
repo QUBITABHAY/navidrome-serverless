@@ -416,6 +416,8 @@ func Load(noConfigDump bool) {
 		Server.DbPath = filepath.Join(Server.DataFolder.String(), consts.DefaultDbPath)
 	}
 
+	applyR2EnvOverrides()
+
 	out := os.Stderr
 	if Server.LogFile != "" {
 		if mkErr := os.MkdirAll(filepath.Dir(Server.LogFile), os.ModePerm); mkErr != nil {
@@ -537,6 +539,41 @@ func Load(noConfigDump bool) {
 	// Call init hooks
 	for _, hook := range hooks {
 		hook()
+	}
+}
+
+func applyR2EnvOverrides() {
+	if Server.R2.Bucket == "" {
+		Server.R2.Bucket = os.Getenv("ND_R2_BUCKET")
+	}
+	if Server.R2.AccountID == "" {
+		Server.R2.AccountID = os.Getenv("ND_R2_ACCOUNTID")
+	}
+	if Server.R2.AccessKeyID == "" {
+		Server.R2.AccessKeyID = os.Getenv("ND_R2_ACCESSKEYID")
+	}
+	if Server.R2.SecretAccessKey == "" {
+		Server.R2.SecretAccessKey = os.Getenv("ND_R2_SECRETACCESSKEY")
+	}
+	if Server.R2.Endpoint == "" {
+		Server.R2.Endpoint = os.Getenv("ND_R2_ENDPOINT")
+	}
+	if Server.R2.PublicURL == "" {
+		Server.R2.PublicURL = os.Getenv("ND_R2_PUBLICURL")
+	}
+	if Server.R2.Region == "" {
+		if r := os.Getenv("ND_R2_REGION"); r != "" {
+			Server.R2.Region = r
+		} else {
+			Server.R2.Region = "auto"
+		}
+	}
+	if !Server.R2.EnablePresignedStream {
+		if val := os.Getenv("ND_R2_ENABLEPRESIGNEDSTREAM"); val == "true" || val == "1" {
+			Server.R2.EnablePresignedStream = true
+		} else if Server.R2.Bucket != "" {
+			Server.R2.EnablePresignedStream = true
+		}
 	}
 }
 
