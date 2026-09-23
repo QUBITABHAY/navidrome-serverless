@@ -73,6 +73,8 @@ github.com/deluan/sanitize v0.0.0-20241120162836-fdfd8fdfaa55 h1:wSCnggTs2f2ji6n
 github.com/deluan/sanitize v0.0.0-20241120162836-fdfd8fdfaa55/go.mod h1:ZNCLJfehvEf34B7BbLKjgpsL9lyW7q938w/GY1XgV4E=
 github.com/dexterlb/mpvipc v0.0.0-20260722094525-0cf47d745b36 h1:KtPfdSST6e0vJbMzMmVqPa5mO1u8vMBlybRCW2ieXpA=
 github.com/dexterlb/mpvipc v0.0.0-20260722094525-0cf47d745b36/go.mod h1:RkQWLNITKkXHLP7LXxZSgEq+uFWU25M5qW7qfEhL9Wc=
+github.com/dhowden/tag v0.0.0-20240417053706-3d75831295e8 h1:OtSeLS5y0Uy01jaKK4mA/WVIYtpzVm63vLVAPzJXigg=
+github.com/dhowden/tag v0.0.0-20240417053706-3d75831295e8/go.mod h1:apkPC/CR3s48O2D7Y++n1XWEpgPNNCjXYga3PPbJe2E=
 github.com/djherbis/atime v1.1.0 h1:rgwVbP/5by8BvvjBNrbh64Qz33idKT3pSnMSJsxhi0g=
 github.com/djherbis/atime v1.1.0/go.mod h1:28OF6Y8s3NQWwacXc5eZTsEsiMzp7LF8MbXE+XJPdBE=
 github.com/djherbis/fscache v0.10.2-0.20260829235704-6d85d5878c22 h1:GNKxzBirvK9arfVRGVebhFYBp3tnOZG3nlIog6N5/6I=

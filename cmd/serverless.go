@@ -14,6 +14,7 @@ import (
 	"github.com/navidrome/navidrome/persistence/postgres"
 	"github.com/navidrome/navidrome/server"
 	"github.com/navidrome/navidrome/server/events"
+	"github.com/navidrome/navidrome/server/serverless"
 )
 
 var (
@@ -28,6 +29,7 @@ func GetServerlessApp(ctx context.Context) (http.Handler, error) {
 		conf.Load(true)
 
 		var ds model.DataStore
+		var pgStore *postgres.PostgresStore
 		pgURL := os.Getenv("NEON_DATABASE_URL")
 		if pgURL == "" {
 			pgURL = os.Getenv("POSTGRES_URL")
@@ -38,7 +40,8 @@ func GetServerlessApp(ctx context.Context) (http.Handler, error) {
 
 		if pgURL != "" {
 			log.Info(ctx, "Initializing Serverless DataStore with Neon/PostgreSQL")
-			pgStore, err := postgres.New(ctx, pgURL)
+			var err error
+			pgStore, err = postgres.New(ctx, pgURL)
 			if err != nil {
 				serverlessErr = err
 				return
@@ -56,6 +59,9 @@ func GetServerlessApp(ctx context.Context) (http.Handler, error) {
 		srv.MountRouter("Native API", consts.URLPathNativeAPI, CreateNativeAPIRouter(ctx))
 		srv.MountRouter("Subsonic API", consts.URLPathSubsonicAPI, CreateSubsonicAPIRouter(ctx))
 		srv.MountRouter("Public Endpoints", consts.URLPathPublic, CreatePublicRouter())
+		if pgStore != nil {
+			srv.MountRouter("R2 Sync", "/api/scan/r2", serverless.ScanR2Handler(pgStore))
+		}
 		srv.MountWebUI()
 
 		serverlessApp = srv
