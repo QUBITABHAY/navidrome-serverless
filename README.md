@@ -1,89 +1,134 @@
-<a href="https://www.navidrome.org"><img src="resources/logo-192x192.png" alt="Navidrome logo" title="navidrome" align="right" height="60px" /></a>
+<a href="https://github.com/QUBITABHAY/navidrome-serverless"><img src="resources/logo-192x192.png" alt="Navidrome Serverless logo" title="Navidrome Serverless" align="right" height="70px" /></a>
 
-# Navidrome Music Server &nbsp;[![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Tired%20of%20paying%20for%20music%20subscriptions%2C%20and%20not%20finding%20what%20you%20really%20like%3F%20Roll%20your%20own%20streaming%20service%21&url=https://navidrome.org&via=navidrome)
+# Navidrome Serverless 🚀
 
-[![Last Release](https://img.shields.io/github/v/release/navidrome/navidrome?logo=github&label=latest&style=flat-square)](https://github.com/navidrome/navidrome/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/navidrome/navidrome/pipeline.yml?branch=master&logo=github&style=flat-square)](https://nightly.link/navidrome/navidrome/workflows/pipeline/master)
-[![Downloads](https://img.shields.io/github/downloads/navidrome/navidrome/total?logo=github&style=flat-square)](https://github.com/navidrome/navidrome/releases/latest)
-[![Docker Pulls](https://img.shields.io/docker/pulls/deluan/navidrome?logo=docker&label=pulls&style=flat-square)](https://hub.docker.com/r/deluan/navidrome)
-[![Dev Chat](https://img.shields.io/discord/671335427726114836?logo=discord&label=discord&style=flat-square)](https://discord.gg/xh7j7yF)
-[![Subreddit](https://img.shields.io/reddit/subreddit-subscribers/navidrome?logo=reddit&label=/r/navidrome&style=flat-square)](https://www.reddit.com/r/navidrome/)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0-ff69b4.svg?style=flat-square)](CODE_OF_CONDUCT.md)
-[![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20Navidrome%20Guru-006BFF?style=flat-square)](https://gurubase.io/g/navidrome)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+[![GitHub License](https://img.shields.io/github/license/QUBITABHAY/navidrome-serverless?style=flat-square)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/QUBITABHAY/navidrome-serverless)](https://goreportcard.com/report/github.com/QUBITABHAY/navidrome-serverless)
+[![Subsonic API Compatibility](https://img.shields.io/badge/Subsonic%20API-v1.16.1-blue?style=flat-square)](https://www.navidrome.org/docs/developers/subsonic-api/)
 
-Navidrome is an open source web-based music collection server and streamer. It gives you freedom to listen to your
-music collection from any browser or mobile device. It's like your personal Spotify!
+**Navidrome Serverless** is a cloud-native, serverless distribution of [Navidrome](https://www.navidrome.org). It is re-architected to run entirely on **100% free-tier services**—deployed as serverless functions on **Vercel**, backed by **Neon Serverless PostgreSQL**, and streaming audio directly from **Cloudflare R2** / AWS S3.
 
+> [!NOTE]
+> **No VPS or 24/7 server required!** Enjoy your personal Spotify-like streaming service with **zero idle compute cost**, scale-to-zero database pooling, and **$0 egress fees** on Cloudflare R2.
 
-**Note**: The `master` branch may be in an unstable or even broken state during development. 
-Please use [releases](https://github.com/navidrome/navidrome/releases) instead of 
-the `master` branch in order to get a stable set of binaries.
+---
 
-## [Check out our Live Demo!](https://www.navidrome.org/demo/)
+## 🌟 Key Differences from Upstream Navidrome
 
-__Any feedback is welcome!__ If you need/want a new feature, find a bug or think of any way to improve Navidrome, 
-please file a [GitHub issue](https://github.com/navidrome/navidrome/issues) or join the discussion in our 
-[Subreddit](https://www.reddit.com/r/navidrome/). If you want to contribute to the project in any other way 
-([ui/backend dev](https://www.navidrome.org/docs/developers/), 
-[translations](https://www.navidrome.org/docs/developers/translations/), 
-[themes](https://www.navidrome.org/docs/developers/creating-themes)), please join the chat in our 
-[Discord server](https://discord.gg/xh7j7yF). 
+Standard Navidrome is designed for persistent virtual machines or home servers with a local filesystem and SQLite database. **Navidrome Serverless** adapts the core architecture for stateless, ephemeral environments:
 
-## Installation
+| Feature | Standard Navidrome | Navidrome Serverless |
+| :--- | :--- | :--- |
+| **Hosting** | VPS, Docker, Raspberry Pi | **Vercel Serverless Functions** (or AWS Lambda) |
+| **Database** | Local SQLite (`navidrome.db`) | **Neon Serverless PostgreSQL** via type-safe [`sqlc`](https://sqlc.dev) & `pgx/v5` connection pooling |
+| **Audio Storage** | Local hard drive / NFS / SMB | **Cloudflare R2** or AWS S3 Object Storage |
+| **Streaming Delivery** | Server proxies all audio chunks | **Direct HTTP 302 Presigned Streaming** from Cloudflare Edge CDN ($0 egress, zero function timeouts) |
+| **Library Scanner** | Long-running background daemon | **On-demand Webhook**, automated **GitHub Actions Cron**, or local CLI (`scan-r2`) |
+| **Client Compatibility** | Subsonic API + Web UI | **100% Identical** (Symfonium, Substreamer, Feishin, DSub, Web UI, etc.) |
 
-See instructions on the [project's website](https://www.navidrome.org/docs/installation/)
+---
 
-## Cloud Hosting
+## 🏗️ Architecture
 
-[PikaPods](https://www.pikapods.com) has partnered with us to offer you an 
-[officially supported, cloud-hosted solution](https://www.navidrome.org/docs/installation/managed/#pikapods). 
-A share of the revenue helps fund the development of Navidrome at no additional cost for you.
+```mermaid
+flowchart TD
+    Client["Mobile & Desktop Clients\n(Symfonium, Substreamer, Feishin, Web)"]
+    Vercel["Vercel Serverless Function\n(Go Handler / Subsonic API)"]
+    Neon[("Neon PostgreSQL\n(Metadata via sqlc)")]
+    R2[("Cloudflare R2 / S3\n(Audio Files)")]
+    Scanner["Library Sync Engine\n(GitHub Actions / Webhook / CLI)"]
 
-[![PikaPods](https://www.pikapods.com/static/run-button.svg)](https://www.pikapods.com/pods?run=navidrome)
+    Client -->|"API requests (browse, playlists, search)"| Vercel
+    Vercel <-->|"Scale-to-zero pgx pool"| Neon
+    Client -->|"GET /rest/stream"| Vercel
+    Vercel -->|"HTTP 302 Redirect (Presigned URL)"| Client
+    Client -->|"Direct audio playback ($0 egress)"| R2
+    Scanner -->|"HTTP Range scan metadata (ID3/Vorbis)"| R2
+    Scanner -->|"Update song/album catalog"| Neon
+```
 
-## Features
- 
- - Handles very **large music collections**
- - Streams virtually **any audio format** available
- - Reads and uses all your beautifully curated **metadata**
- - Great support for **compilations** (Various Artists albums) and **box sets** (multi-disc albums)
- - **Multi-user**, each user has their own play counts, playlists, favourites, etc...
- - Very **low resource usage**
- - **Multi-platform**, runs on macOS, Linux and Windows. **Docker** images are also provided
- - Ready to use binaries for all major platforms, including **Raspberry Pi**
- - Automatically **monitors your library** for changes, importing new files and reloading new metadata 
- - Supports **lyrics** from sidecar .ttml, .yaml/.yml Lyricsfile, .elrc, .lrc, .srt, .txt files and embedded TTML, Enhanced LRC, LRC, SRT, and plain-text tags (via `lyricspriority`)
- - **Themeable**, modern and responsive **Web interface** based on [Material UI](https://material-ui.com)
- - **Compatible** with all Subsonic/Madsonic/Airsonic [clients](https://www.navidrome.org/docs/overview/#apps)
- - **Transcoding** on the fly. Can be set per user/player. **Opus encoding is supported**
- - Translated to **various languages**
+---
 
-## Translations
+## 📱 Client Compatibility
 
-Navidrome uses [POEditor](https://poeditor.com/) for translations, and we are always looking 
-for [more contributors](https://www.navidrome.org/docs/developers/translations/)
+Navidrome Serverless implements the standard Subsonic API (v1.16.1) and is fully compatible with any Subsonic client across all platforms:
 
-<a href="https://poeditor.com/"> 
-<img height="32" src="https://github.com/user-attachments/assets/c19b1d2b-01e1-4682-a007-12356c42147c">
-</a>
+* **Web Browser**: Built-in responsive React / Material UI web player (`https://your-domain.vercel.app/app`)
+* **iOS (iPhone, iPad, CarPlay)**: [Substreamer](https://substreamer.app/), [Amplefor](https://amplefor.com/), [play:Sub](https://playsub.app/)
+* **Android (Auto, WearOS)**: [Symfonium](https://symfonium.app/), [DSub](https://github.com/daneren200/navidrome-dsub)
+* **macOS / Windows / Linux**: [Feishin](https://github.com/jeffvli/feishin), [Supersonic](https://github.com/dweomer/supersonic)
 
-## Documentation
-All documentation can be found in the project's website: https://www.navidrome.org/docs. 
-Here are some useful direct links:
+---
 
-- [Overview](https://www.navidrome.org/docs/overview/)
-- [Installation](https://www.navidrome.org/docs/installation/)
-  - [Docker](https://www.navidrome.org/docs/installation/docker/)
-  - [Binaries](https://www.navidrome.org/docs/installation/pre-built-binaries/)
-  - [Build from source](https://www.navidrome.org/docs/installation/build-from-source/)
-- [Development](https://www.navidrome.org/docs/developers/)
-- [Subsonic API Compatibility](https://www.navidrome.org/docs/developers/subsonic-api/)
+## 🚀 Quick Start & Deployment
 
-## Screenshots
+For detailed step-by-step instructions, see the complete [**Deployment Guide (DEPLOYMENT.md)**](DEPLOYMENT.md).
 
-<p align="left">
-    <img height="550" src="https://raw.githubusercontent.com/navidrome/navidrome/master/.github/screenshots/ss-mobile-login.png">
-    <img height="550" src="https://raw.githubusercontent.com/navidrome/navidrome/master/.github/screenshots/ss-mobile-player.png">
-    <img height="550" src="https://raw.githubusercontent.com/navidrome/navidrome/master/.github/screenshots/ss-mobile-album-view.png">
-    <img width="550" src="https://raw.githubusercontent.com/navidrome/navidrome/master/.github/screenshots/ss-desktop-player.png">
-</p>
+### 1. Set up Neon PostgreSQL (Free)
+1. Create a free PostgreSQL instance at [neon.tech](https://neon.tech).
+2. Apply the consolidated PostgreSQL schema:
+   ```bash
+   psql "YOUR_NEON_POSTGRES_URL" -f db/postgres/schema.sql
+   ```
+
+### 2. Set up Cloudflare R2 (Free 10 GB)
+1. Create an R2 bucket in the Cloudflare Dashboard (e.g., `my-music`).
+2. Generate an R2 API token with **Object Read & Write** permissions.
+3. Upload your music folders into the bucket.
+
+### 3. Deploy to Vercel
+1. Import your GitHub repository to [Vercel](https://vercel.com).
+2. Configure the following environment variables:
+   * `NEON_DATABASE_URL`: `postgres://user:password@ep-xyz.neon.tech/neondb?sslmode=require`
+   * `ND_R2_ACCOUNTID`: Your Cloudflare Account ID
+   * `ND_R2_ACCESSKEYID`: Your Cloudflare R2 Access Key ID
+   * `ND_R2_SECRETACCESSKEY`: Your Cloudflare R2 Secret Access Key
+   * `ND_R2_BUCKET`: Your bucket name (e.g. `my-music`)
+   * `ND_R2_ENABLEPRESIGNEDSTREAM`: `true`
+   * `ND_SCAN_SECRET`: Secret token for webhook scans
+3. Click **Deploy**.
+
+### 4. Index Your Music Library
+You can trigger metadata extraction in 3 convenient ways:
+* **Automated Cron**: Included GitHub Actions workflow ([`.github/workflows/r2-sync.yml`](.github/workflows/r2-sync.yml)) scans every 6 hours automatically.
+* **On-Demand Webhook**:
+  ```bash
+  curl -X POST "https://your-app.vercel.app/api/scan/r2?secret=YOUR_ND_SCAN_SECRET"
+  ```
+* **Local CLI**:
+  ```bash
+  go run main.go scan-r2
+  ```
+
+---
+
+## 🛠️ Local Development & Testing
+
+```bash
+# Clone the repository
+git clone https://github.com/QUBITABHAY/navidrome-serverless.git
+cd navidrome-serverless
+
+# Run code linters
+make lint
+
+# Run unit tests
+make test
+
+# Generate sqlc models (if modifying PostgreSQL queries)
+sqlc generate
+```
+
+---
+
+## 📜 Credits & Acknowledgements
+
+* Original [Navidrome](https://github.com/navidrome/navidrome) project created and maintained by [Deluan Quintao](https://github.com/deluan) and contributors.
+* Navidrome Serverless maintains Subsonic API specification compatibility while decoupling compute, database, and storage for modern cloud architectures.
+
+---
+
+## 📄 License
+
+Navidrome Serverless is licensed under the [GNU General Public License v3.0 (GPLv3)](LICENSE).
