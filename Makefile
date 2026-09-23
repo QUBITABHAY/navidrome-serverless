@@ -7,6 +7,14 @@ GO_BUILD_TAGS=netgo,sqlite_fts5$(if $(EXTRA_BUILD_TAGS),$(comma)$(EXTRA_BUILD_TA
 # Set global environment variables, required for most targets
 export ND_ENABLEINSIGHTSCOLLECTOR=false
 
+# On macOS, ensure SDKROOT points to a stable SDK to prevent clang tapi malformed file errors with beta SDKs
+ifeq ($(shell uname -s),Darwin)
+  ifeq ($(SDKROOT),)
+    SDKROOT := $(shell if [ -d /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk ]; then echo /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk; elif [ -d /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk ]; then echo /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk; else xcrun --show-sdk-path; fi)
+    export SDKROOT
+  endif
+endif
+
 ifneq ("$(wildcard .git/HEAD)","")
 GIT_SHA=$(shell git rev-parse --short HEAD)
 GIT_TAG=$(shell git describe --tags --abbrev=0 2>/dev/null || echo v0.0.0)-SNAPSHOT

@@ -1,4 +1,13 @@
 #!/bin/sh
 set -e
 
+# On macOS, ensure SDKROOT points to a stable SDK to avoid tapi arm64e.x1-macos linker errors with beta SDKs
+if [ -z "$SDKROOT" ] && [ "$(uname -s)" = "Darwin" ]; then
+  if [ -d "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" ]; then
+    export SDKROOT="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
+  elif [ -d "/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk" ]; then
+    export SDKROOT="/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk"
+  fi
+fi
+
 make pre-push
