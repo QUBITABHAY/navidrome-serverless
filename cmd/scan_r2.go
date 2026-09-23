@@ -16,15 +16,9 @@ var scanR2Cmd = &cobra.Command{
 		preRun()
 		ctx := cmd.Context()
 
-		pgURL := os.Getenv("NEON_DATABASE_URL")
+		pgURL := os.Getenv("DATABASE_URL")
 		if pgURL == "" {
-			pgURL = os.Getenv("POSTGRES_URL")
-		}
-		if pgURL == "" {
-			pgURL = os.Getenv("ND_DATABASE_URL")
-		}
-		if pgURL == "" {
-			log.Fatal(ctx, "NEON_DATABASE_URL or POSTGRES_URL environment variable must be set")
+			log.Fatal(ctx, "DATABASE_URL environment variable must be set")
 		}
 
 		store, err := postgres.New(ctx, pgURL)

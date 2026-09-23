@@ -2,7 +2,7 @@ name: Cloudflare R2 Library Sync
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Runs every 6 hours
+    - cron: "0 */6 * * *" # Runs every 6 hours
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 jobs:
@@ -15,12 +15,12 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.27'
+          go-version: "1.27"
           cache: true
 
       - name: Run R2 Sync
         env:
-          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           ND_R2_ACCOUNTID: ${{ secrets.ND_R2_ACCOUNTID }}
           ND_R2_ACCESSKEYID: ${{ secrets.ND_R2_ACCESSKEYID }}
           ND_R2_SECRETACCESSKEY: ${{ secrets.ND_R2_SECRETACCESSKEY }}

@@ -1,33 +1,34 @@
 # Navidrome Serverless Deployment Guide
 
-This guide walks you through deploying your Navidrome Serverless setup on **Vercel** with **NeonDB (PostgreSQL)** and **Cloudflare R2** for free global music streaming across all your devices (Mac, Windows, Linux, Android, iOS).
+This guide walks you through deploying your Navidrome Serverless setup on **Vercel** with an external **PostgreSQL** database and **Cloudflare R2** (or AWS S3) for free global music streaming across all your devices (Mac, Windows, Linux, Android, iOS).
 
 ---
 
 ## Architecture Summary
 
 * **Frontend & Subsonic API**: Hosted on **Vercel** as serverless functions.
-* **Database**: **Neon Serverless PostgreSQL** managed via `sqlc` and `pgx/v5`.
+* **Database**: **Serverless / Managed PostgreSQL** managed via `sqlc` and `pgx/v5` connection pooling.
 * **Music Storage & Streaming**: **Cloudflare R2** with HTTP 302 presigned streaming redirects directly from Cloudflare's edge CDN ($0 egress fees, zero timeouts).
 * **Sync Engine**: On-demand webhook (`/api/scan/r2`) or free automated GitHub Actions cron workflow (`.github/workflows/r2-sync.yml`).
 
 ---
 
-## Step 1: Set Up Neon PostgreSQL (Free)
+## Step 1: Set Up PostgreSQL
 
-1. Sign up at [neon.tech](https://neon.tech) and create a free project (e.g. `navidrome-db`).
-2. Copy your connection string:
+You can use any cloud PostgreSQL database provider (such as Neon, Supabase, Tembo, Aiven, RDS, or a self-hosted instance):
+
+1. Provision a database instance and copy your PostgreSQL connection string:
    ```
-   postgres://username:password@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require
+   postgres://username:password@hostname:5432/dbname?sslmode=require
    ```
-3. Initialize the database schema with the consolidated schema file:
+2. Initialize the database schema using the consolidated schema file:
    ```bash
-   psql "postgres://username:password@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require" -f db/postgres/schema.sql
+   psql "postgres://username:password@hostname:5432/dbname?sslmode=require" -f db/postgres/schema.sql
    ```
 
 ---
 
-## Step 2: Set Up Cloudflare R2 (Free 10 GB)
+## Step 2: Set Up Cloudflare R2 (Free 10 GB) or AWS S3
 
 1. Log into your [Cloudflare Dashboard](https://dash.cloudflare.com/) > **R2 Object Storage**.
 2. Click **Create Bucket** (e.g. `my-navidrome-music`).
@@ -40,10 +41,8 @@ This guide walks you through deploying your Navidrome Serverless setup on **Verc
 
 ## Step 3: Deploy to Vercel (Free)
 
-1. Push this directory (`/Users/abhay/Desktop/navidrome-serverless`) to your GitHub repository:
+1. Push your code to your GitHub repository:
    ```bash
-   git remote add origin https://github.com/<your-username>/navidrome-serverless.git
-   git branch -M main
    git push -u origin main
    ```
 2. Log into [vercel.com](https://vercel.com) > **Add New** > **Project** > Import your repository.
@@ -51,7 +50,7 @@ This guide walks you through deploying your Navidrome Serverless setup on **Verc
 
 | Environment Variable | Value / Description |
 | :--- | :--- |
-| `NEON_DATABASE_URL` | Your Neon connection string from Step 1 |
+| `DATABASE_URL` | Your PostgreSQL connection string |
 | `ND_R2_ACCOUNTID` | Your Cloudflare Account ID |
 | `ND_R2_ACCESSKEYID` | Cloudflare R2 Access Key ID |
 | `ND_R2_SECRETACCESSKEY` | Cloudflare R2 Secret Access Key |

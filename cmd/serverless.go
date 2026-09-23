@@ -30,16 +30,10 @@ func GetServerlessApp(ctx context.Context) (http.Handler, error) {
 
 		var ds model.DataStore
 		var pgStore *postgres.PostgresStore
-		pgURL := os.Getenv("NEON_DATABASE_URL")
-		if pgURL == "" {
-			pgURL = os.Getenv("POSTGRES_URL")
-		}
-		if pgURL == "" {
-			pgURL = os.Getenv("ND_DATABASE_URL")
-		}
+		pgURL := os.Getenv("DATABASE_URL")
 
 		if pgURL != "" {
-			log.Info(ctx, "Initializing Serverless DataStore with Neon/PostgreSQL")
+			log.Info(ctx, "Initializing Serverless DataStore with PostgreSQL")
 			var err error
 			pgStore, err = postgres.New(ctx, pgURL)
 			if err != nil {

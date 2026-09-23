@@ -7,10 +7,10 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/QUBITABHAY/navidrome-serverless)](https://goreportcard.com/report/github.com/QUBITABHAY/navidrome-serverless)
 [![Subsonic API Compatibility](https://img.shields.io/badge/Subsonic%20API-v1.16.1-blue?style=flat-square)](https://www.navidrome.org/docs/developers/subsonic-api/)
 
-**Navidrome Serverless** is a cloud-native, serverless distribution of [Navidrome](https://www.navidrome.org). It is re-architected to run entirely on **100% free-tier services**—deployed as serverless functions on **Vercel**, backed by **Neon Serverless PostgreSQL**, and streaming audio directly from **Cloudflare R2** / AWS S3.
+**Navidrome Serverless** is a cloud-native, serverless distribution of [Navidrome](https://www.navidrome.org). It is re-architected to run entirely on **100% free-tier services**—deployed as serverless functions on **Vercel**, backed by any **Serverless or Managed PostgreSQL** database, and streaming audio directly from **Cloudflare R2** / AWS S3.
 
 > [!NOTE]
-> **No VPS or 24/7 server required!** Enjoy your personal Spotify-like streaming service with **zero idle compute cost**, scale-to-zero database pooling, and **$0 egress fees** on Cloudflare R2.
+> **No VPS or 24/7 server required!** Enjoy your personal Spotify-like streaming service with **zero idle compute cost**, scale-to-zero database connection pooling, and **$0 egress fees** on Cloudflare R2.
 
 ---
 
@@ -21,7 +21,7 @@ Standard Navidrome is designed for persistent virtual machines or home servers w
 | Feature | Standard Navidrome | Navidrome Serverless |
 | :--- | :--- | :--- |
 | **Hosting** | VPS, Docker, Raspberry Pi | **Vercel Serverless Functions** (or AWS Lambda) |
-| **Database** | Local SQLite (`navidrome.db`) | **Neon Serverless PostgreSQL** via type-safe [`sqlc`](https://sqlc.dev) & `pgx/v5` connection pooling |
+| **Database** | Local SQLite (`navidrome.db`) | **External / Serverless PostgreSQL** via type-safe [`sqlc`](https://sqlc.dev) & `pgx/v5` connection pooling |
 | **Audio Storage** | Local hard drive / NFS / SMB | **Cloudflare R2** or AWS S3 Object Storage |
 | **Streaming Delivery** | Server proxies all audio chunks | **Direct HTTP 302 Presigned Streaming** from Cloudflare Edge CDN ($0 egress, zero function timeouts) |
 | **Library Scanner** | Long-running background daemon | **On-demand Webhook**, automated **GitHub Actions Cron**, or local CLI (`scan-r2`) |
@@ -35,17 +35,17 @@ Standard Navidrome is designed for persistent virtual machines or home servers w
 flowchart TD
     Client["Mobile & Desktop Clients\n(Symfonium, Substreamer, Feishin, Web)"]
     Vercel["Vercel Serverless Function\n(Go Handler / Subsonic API)"]
-    Neon[("Neon PostgreSQL\n(Metadata via sqlc)")]
+    Postgres[("PostgreSQL Database\n(Metadata via sqlc)")]
     R2[("Cloudflare R2 / S3\n(Audio Files)")]
     Scanner["Library Sync Engine\n(GitHub Actions / Webhook / CLI)"]
 
     Client -->|"API requests (browse, playlists, search)"| Vercel
-    Vercel <-->|"Scale-to-zero pgx pool"| Neon
+    Vercel <-->|"Scale-to-zero pgx pool"| Postgres
     Client -->|"GET /rest/stream"| Vercel
     Vercel -->|"HTTP 302 Redirect (Presigned URL)"| Client
     Client -->|"Direct audio playback ($0 egress)"| R2
     Scanner -->|"HTTP Range scan metadata (ID3/Vorbis)"| R2
-    Scanner -->|"Update song/album catalog"| Neon
+    Scanner -->|"Update song/album catalog"| Postgres
 ```
 
 ---
@@ -65,14 +65,14 @@ Navidrome Serverless implements the standard Subsonic API (v1.16.1) and is fully
 
 For detailed step-by-step instructions, see the complete [**Deployment Guide (DEPLOYMENT.md)**](DEPLOYMENT.md).
 
-### 1. Set up Neon PostgreSQL (Free)
-1. Create a free PostgreSQL instance at [neon.tech](https://neon.tech).
+### 1. Set up PostgreSQL
+1. Create a PostgreSQL database using any provider of your choice (e.g. Neon, Supabase, Tembo, Aiven, or self-hosted).
 2. Apply the consolidated PostgreSQL schema:
    ```bash
-   psql "YOUR_NEON_POSTGRES_URL" -f db/postgres/schema.sql
+   psql "YOUR_POSTGRES_DATABASE_URL" -f db/postgres/schema.sql
    ```
 
-### 2. Set up Cloudflare R2 (Free 10 GB)
+### 2. Set up Cloudflare R2 (or AWS S3)
 1. Create an R2 bucket in the Cloudflare Dashboard (e.g., `my-music`).
 2. Generate an R2 API token with **Object Read & Write** permissions.
 3. Upload your music folders into the bucket.
@@ -80,7 +80,7 @@ For detailed step-by-step instructions, see the complete [**Deployment Guide (DE
 ### 3. Deploy to Vercel
 1. Import your GitHub repository to [Vercel](https://vercel.com).
 2. Configure the following environment variables:
-   * `NEON_DATABASE_URL`: `postgres://user:password@ep-xyz.neon.tech/neondb?sslmode=require`
+   * `DATABASE_URL`: `postgres://user:password@hostname:5432/dbname?sslmode=require`
    * `ND_R2_ACCOUNTID`: Your Cloudflare Account ID
    * `ND_R2_ACCESSKEYID`: Your Cloudflare R2 Access Key ID
    * `ND_R2_SECRETACCESSKEY`: Your Cloudflare R2 Secret Access Key
