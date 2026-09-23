@@ -34,6 +34,9 @@
   ],
   "env": {
     "ND_BASEURL": "",
-    "ND_SESSIONTIMEOUT": "24h"
+    "ND_SESSIONTIMEOUT": "24h",
+    "ND_DATAFOLDER": "/tmp",
+    "ND_CACHEFOLDER": "/tmp/cache",
+    "ND_PLUGINS_ENABLED": "false"
   }
 }

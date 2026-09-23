@@ -26,7 +26,22 @@ var (
 // GetServerlessApp initializes and returns the singleton serverless HTTP handler for Vercel.
 func GetServerlessApp(ctx context.Context) (http.Handler, error) {
 	serverlessOnce.Do(func() {
+		// In serverless environments (e.g. Vercel, AWS Lambda), the filesystem is read-only except /tmp
+		if os.Getenv("ND_DATAFOLDER") == "" {
+			_ = os.Setenv("ND_DATAFOLDER", "/tmp")
+		}
+		if os.Getenv("ND_CACHEFOLDER") == "" {
+			_ = os.Setenv("ND_CACHEFOLDER", "/tmp/cache")
+		}
+		if os.Getenv("ND_PLUGINS_ENABLED") == "" {
+			_ = os.Setenv("ND_PLUGINS_ENABLED", "false")
+		}
+
 		conf.Load(true)
+
+		conf.Server.DataFolder = conf.NewDir("/tmp")
+		conf.Server.CacheFolder = conf.NewDir("/tmp/cache")
+		conf.Server.Plugins.Enabled = false
 
 		var ds model.DataStore
 		var pgStore *postgres.PostgresStore
