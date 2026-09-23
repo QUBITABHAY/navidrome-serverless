@@ -39,6 +39,7 @@ func (q *Queries) ClearUserLibraries(ctx context.Context, userID string) error {
 
 const countUsers = `-- name: CountUsers :one
 SELECT count(*) FROM "user"
+WHERE password != ''
 `
 
 func (q *Queries) CountUsers(ctx context.Context) (int64, error) {

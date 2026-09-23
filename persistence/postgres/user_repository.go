@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"time"
@@ -10,9 +11,13 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/navidrome/navidrome/conf"
+	"github.com/navidrome/navidrome/consts"
+	"github.com/navidrome/navidrome/log"
 	"github.com/navidrome/navidrome/model"
 	"github.com/navidrome/navidrome/model/id"
 	"github.com/navidrome/navidrome/persistence/postgres/pgdb"
+	"github.com/navidrome/navidrome/utils"
 )
 
 type userRepository struct {
@@ -89,6 +94,43 @@ func (r *userRepository) GetAll(_ ...model.QueryOptions) (model.Users, error) {
 	return users, nil
 }
 
+func keyTo32Bytes(input string) []byte {
+	data := sha256.Sum256([]byte(input))
+	return data[0:]
+}
+
+func getEncryptionKey() []byte {
+	if conf.Server.PasswordEncryptionKey != "" {
+		return keyTo32Bytes(conf.Server.PasswordEncryptionKey)
+	}
+	return keyTo32Bytes(consts.DefaultEncryptionKey)
+}
+
+func (r *userRepository) encryptPassword(u *model.User) error {
+	encKey := getEncryptionKey()
+	encPassword, err := utils.Encrypt(r.ctx, encKey, u.NewPassword)
+	if err != nil {
+		log.Error(r.ctx, "Error encrypting user's password", "user", u.UserName, err)
+		return err
+	}
+	u.NewPassword = encPassword
+	return nil
+}
+
+func (r *userRepository) decryptPassword(u *model.User) error {
+	if u.Password == "" {
+		return nil
+	}
+	encKey := getEncryptionKey()
+	plaintext, err := utils.Decrypt(r.ctx, encKey, u.Password)
+	if err != nil {
+		log.Error(r.ctx, "Error decrypting user's password", "user", u.UserName, err)
+		return err
+	}
+	u.Password = plaintext
+	return nil
+}
+
 func (r *userRepository) Put(u *model.User) error {
 	if u.ID == "" {
 		u.ID = id.NewRandom()
@@ -98,12 +140,21 @@ func (r *userRepository) Put(u *model.User) error {
 	}
 	u.UpdatedAt = time.Now()
 
+	passwordToSave := u.Password
+	if u.NewPassword != "" {
+		if err := r.encryptPassword(u); err != nil {
+			return err
+		}
+		passwordToSave = u.NewPassword
+		u.TokenEpoch++
+	}
+
 	params := pgdb.UpsertUserParams{
 		ID:             u.ID,
 		UserName:       u.UserName,
 		Name:           u.Name,
 		Email:          u.Email,
-		Password:       u.Password,
+		Password:       passwordToSave,
 		IsAdmin:        u.IsAdmin,
 		TokenEpoch:     int32(u.TokenEpoch),
 		ScrobbleFilter: u.ScrobbleFilter,
@@ -116,6 +167,13 @@ func (r *userRepository) Put(u *model.User) error {
 		return fmt.Errorf("upserting user: %w", err)
 	}
 	*u = *toModelUser(saved)
+
+	if u.IsAdmin {
+		_, _ = r.pool.Exec(r.ctx,
+			`INSERT INTO user_library (user_id, library_id) SELECT $1, id FROM library ON CONFLICT DO NOTHING`,
+			u.ID,
+		)
+	}
 	return nil
 }
 
@@ -161,7 +219,14 @@ func (r *userRepository) FindByUsername(username string) (*model.User, error) {
 }
 
 func (r *userRepository) FindByUsernameWithPassword(username string) (*model.User, error) {
-	return r.FindByUsername(username)
+	usr, err := r.FindByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+	if usr != nil {
+		_ = r.decryptPassword(usr)
+	}
+	return usr, nil
 }
 
 func (r *userRepository) GetUserLibraries(userID string) (model.Libraries, error) {

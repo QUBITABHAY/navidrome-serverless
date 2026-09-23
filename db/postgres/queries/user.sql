@@ -17,7 +17,8 @@ SELECT * FROM "user"
 ORDER BY user_name ASC;
 
 -- name: CountUsers :one
-SELECT count(*) FROM "user";
+SELECT count(*) FROM "user"
+WHERE password != '';
 
 -- name: UpsertUser :one
 INSERT INTO "user" (

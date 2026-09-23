@@ -43,6 +43,9 @@ func New(ctx context.Context, connString string) (*PostgresStore, error) {
 		return nil, fmt.Errorf("initializing postgres database schema: %w", err)
 	}
 
+	// Clean up any incomplete/corrupted user created with empty password
+	_, _ = pool.Exec(ctx, `DELETE FROM "user" WHERE password = '';`)
+
 	return &PostgresStore{
 		pool:    pool,
 		queries: pgdb.New(pool),
