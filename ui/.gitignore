@@ -2,6 +2,7 @@ node_modules
 .eslintcache
 
 # build is tracked so serverless binary embeds web UI assets
+build/**/*.map
 
 /coverage/
 public/3rdparty/workbox

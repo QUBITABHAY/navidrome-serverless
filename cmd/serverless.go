@@ -65,9 +65,9 @@ func GetServerlessApp(ctx context.Context) (http.Handler, error) {
 		insights := metrics.GetInstance(ds)
 		srv := server.New(ds, broker, insights)
 
-		srv.MountRouter("Native API", consts.URLPathNativeAPI, CreateNativeAPIRouter(ctx))
-		srv.MountRouter("Subsonic API", consts.URLPathSubsonicAPI, CreateSubsonicAPIRouter(ctx))
-		srv.MountRouter("Public Endpoints", consts.URLPathPublic, CreatePublicRouter())
+		srv.MountRouter("Native API", consts.URLPathNativeAPI, CreateNativeAPIRouterWithDS(ctx, ds))
+		srv.MountRouter("Subsonic API", consts.URLPathSubsonicAPI, CreateSubsonicAPIRouterWithDS(ctx, ds))
+		srv.MountRouter("Public Endpoints", consts.URLPathPublic, CreatePublicRouterWithDS(ds))
 		if pgStore != nil {
 			srv.MountRouter("R2 Sync", "/api/scan/r2", serverless.ScanR2Handler(pgStore))
 		}
