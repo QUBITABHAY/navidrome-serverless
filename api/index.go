@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 
 	"github.com/navidrome/navidrome/cmd"
@@ -9,6 +11,14 @@ import (
 
 // Handler is the Vercel serverless function entry point
 func Handler(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			buf := make([]byte, 8192)
+			n := runtime.Stack(buf, false)
+			stack := string(buf[:n])
+			http.Error(w, fmt.Sprintf("SERVERLESS PANIC: %v\n\nStack:\n%s", rec, stack), http.StatusInternalServerError)
+		}
+	}()
 	// If Vercel rewrote the request to /api, recover the original client path
 	if r.URL.Path == "/api" || r.URL.Path == "/api/" || r.URL.Path == "/api/index" || r.URL.Path == "/api/index.go" {
 		if matched := r.Header.Get("X-Matched-Path"); matched != "" {
