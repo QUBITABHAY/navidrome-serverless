@@ -3,10 +3,12 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	dbschema "github.com/navidrome/navidrome/db/postgres"
+	"github.com/navidrome/navidrome/log"
 	"github.com/navidrome/navidrome/model"
 	"github.com/navidrome/navidrome/persistence/postgres/pgdb"
 )
@@ -76,27 +78,110 @@ func (s *PostgresStore) Property(ctx context.Context) model.PropertyRepository {
 	return NewPropertyRepository(ctx, s.queries)
 }
 
-func (s *PostgresStore) Folder(ctx context.Context) model.FolderRepository           { return nil }
-func (s *PostgresStore) Album(ctx context.Context) model.AlbumRepository             { return nil }
-func (s *PostgresStore) Artist(ctx context.Context) model.ArtistRepository           { return nil }
-func (s *PostgresStore) MediaFile(ctx context.Context) model.MediaFileRepository     { return nil }
-func (s *PostgresStore) Genre(ctx context.Context) model.GenreRepository             { return nil }
-func (s *PostgresStore) Tag(ctx context.Context) model.TagRepository                 { return nil }
-func (s *PostgresStore) Playlist(ctx context.Context) model.PlaylistRepository       { return nil }
-func (s *PostgresStore) PlayQueue(ctx context.Context) model.PlayQueueRepository     { return nil }
-func (s *PostgresStore) Transcoding(ctx context.Context) model.TranscodingRepository { return nil }
-func (s *PostgresStore) Player(ctx context.Context) model.PlayerRepository           { return nil }
-func (s *PostgresStore) Radio(ctx context.Context) model.RadioRepository             { return nil }
-func (s *PostgresStore) Share(ctx context.Context) model.ShareRepository             { return nil }
-func (s *PostgresStore) UserProps(ctx context.Context) model.UserPropsRepository     { return nil }
+func (s *PostgresStore) Folder(ctx context.Context) model.FolderRepository {
+	return NewFolderRepository(ctx, s.queries, s.pool)
+}
+
+func (s *PostgresStore) Album(ctx context.Context) model.AlbumRepository {
+	return NewAlbumRepository(ctx, s.queries, s.pool)
+}
+
+func (s *PostgresStore) Artist(ctx context.Context) model.ArtistRepository {
+	return NewArtistRepository(ctx, s.queries, s.pool)
+}
+
+func (s *PostgresStore) MediaFile(ctx context.Context) model.MediaFileRepository {
+	return NewMediaFileRepository(ctx, s.queries, s.pool)
+}
+
+func (s *PostgresStore) Genre(ctx context.Context) model.GenreRepository {
+	return NewGenreRepository(ctx, s.pool)
+}
+
+func (s *PostgresStore) Tag(ctx context.Context) model.TagRepository {
+	return NewTagRepository(ctx, s.pool)
+}
+
+func (s *PostgresStore) Playlist(ctx context.Context) model.PlaylistRepository {
+	return NewPlaylistRepository(ctx, s.queries, s.pool)
+}
+
+func (s *PostgresStore) PlayQueue(ctx context.Context) model.PlayQueueRepository {
+	return NewPlayQueueRepository(ctx, s.pool)
+}
+
+func (s *PostgresStore) Transcoding(ctx context.Context) model.TranscodingRepository {
+	return NewTranscodingRepository(ctx)
+}
+
+func (s *PostgresStore) Player(ctx context.Context) model.PlayerRepository {
+	return NewPlayerRepository(ctx, s.pool)
+}
+
+func (s *PostgresStore) Radio(ctx context.Context) model.RadioRepository {
+	return NewRadioRepository(ctx, s.pool)
+}
+
+func (s *PostgresStore) Share(ctx context.Context) model.ShareRepository {
+	return NewShareRepository(ctx, s.pool)
+}
+
+func (s *PostgresStore) UserProps(ctx context.Context) model.UserPropsRepository {
+	return NewUserPropsRepository(ctx, s.pool)
+}
+
 func (s *PostgresStore) ScrobbleBuffer(ctx context.Context) model.ScrobbleBufferRepository {
+	return NewScrobbleBufferRepository(ctx)
+}
+
+func (s *PostgresStore) Scrobble(ctx context.Context) model.ScrobbleRepository {
+	return NewScrobbleRepository(ctx, s.pool)
+}
+
+func (s *PostgresStore) Plugin(ctx context.Context) model.PluginRepository {
+	return NewPluginRepository(ctx)
+}
+
+func (s *PostgresStore) Artwork(ctx context.Context) model.ArtworkRepository {
+	return NewArtworkRepository(ctx, s.pool)
+}
+
+func (s *PostgresStore) ArtworkQueue(ctx context.Context) model.ArtworkQueueRepository {
+	return NewArtworkQueueRepository(ctx, s.pool)
+}
+
+func (s *PostgresStore) Resource(ctx context.Context, m any) model.ResourceRepository {
+	switch m.(type) {
+	case model.User:
+		return s.User(ctx).(model.ResourceRepository)
+	case model.Transcoding:
+		return s.Transcoding(ctx).(model.ResourceRepository)
+	case model.Player:
+		return s.Player(ctx).(model.ResourceRepository)
+	case model.Artist:
+		return s.Artist(ctx).(model.ResourceRepository)
+	case model.Album:
+		return s.Album(ctx).(model.ResourceRepository)
+	case model.MediaFile:
+		return s.MediaFile(ctx).(model.ResourceRepository)
+	case model.Genre:
+		return s.Genre(ctx).(model.ResourceRepository)
+	case model.Playlist:
+		return s.Playlist(ctx).(model.ResourceRepository)
+	case model.Radio:
+		return s.Radio(ctx).(model.ResourceRepository)
+	case model.Share:
+		return s.Share(ctx).(model.ResourceRepository)
+	case model.Tag:
+		return s.Tag(ctx).(model.ResourceRepository)
+	case model.Plugin:
+		return s.Plugin(ctx).(model.ResourceRepository)
+	case model.Scrobble:
+		return s.Scrobble(ctx).(model.ResourceRepository)
+	}
+	log.Error("Resource not implemented for postgres", "model", reflect.TypeOf(m).Name())
 	return nil
 }
-func (s *PostgresStore) Scrobble(ctx context.Context) model.ScrobbleRepository            { return nil }
-func (s *PostgresStore) Plugin(ctx context.Context) model.PluginRepository                { return nil }
-func (s *PostgresStore) Artwork(ctx context.Context) model.ArtworkRepository              { return nil }
-func (s *PostgresStore) ArtworkQueue(ctx context.Context) model.ArtworkQueueRepository    { return nil }
-func (s *PostgresStore) Resource(ctx context.Context, model any) model.ResourceRepository { return nil }
 
 // Transaction support
 func (s *PostgresStore) WithTx(block func(tx model.DataStore) error, _ ...string) error {

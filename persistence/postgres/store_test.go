@@ -127,3 +127,61 @@ func TestPostgresStore_LiveConnection(t *testing.T) {
 		t.Errorf("expected library name 'Test Music', got %s", loadedLib.Name)
 	}
 }
+
+func TestPostgresStore_InterfaceCompleteness(t *testing.T) {
+	ctx := context.Background()
+	store := &PostgresStore{}
+
+	// Test ScrobbleBuffer does not panic (preventing bufferedScrobbler crash)
+	scrobbleBuf := store.ScrobbleBuffer(ctx)
+	if scrobbleBuf == nil {
+		t.Fatal("expected ScrobbleBuffer not to be nil")
+	}
+	userIDs, err := scrobbleBuf.UserIDs("lastfm")
+	if err != nil {
+		t.Fatalf("unexpected error from UserIDs: %v", err)
+	}
+	if len(userIDs) != 0 {
+		t.Fatalf("expected 0 userIDs, got %d", len(userIDs))
+	}
+
+	// Test Transcoding does not panic
+	transcodingRepo := store.Transcoding(ctx)
+	if transcodingRepo == nil {
+		t.Fatal("expected Transcoding not to be nil")
+	}
+
+	// Test PlayQueue does not panic
+	playQueueRepo := store.PlayQueue(ctx)
+	if playQueueRepo == nil {
+		t.Fatal("expected PlayQueue not to be nil")
+	}
+	pq, err := playQueueRepo.Retrieve("u1")
+	if err != nil || pq.UserID != "u1" {
+		t.Fatalf("unexpected play queue: %+v, err: %v", pq, err)
+	}
+
+	// Test Resource mappings
+	models := []any{
+		model.Album{},
+		model.MediaFile{},
+		model.User{},
+		model.Transcoding{},
+		model.Player{},
+		model.Radio{},
+		model.Share{},
+		model.Playlist{},
+		model.Genre{},
+		model.Tag{},
+		model.Scrobble{},
+		model.Plugin{},
+		model.Artist{},
+	}
+
+	for _, m := range models {
+		res := store.Resource(ctx, m)
+		if res == nil {
+			t.Fatalf("expected Resource for %T to not be nil", m)
+		}
+	}
+}

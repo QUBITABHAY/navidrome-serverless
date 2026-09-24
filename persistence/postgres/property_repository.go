@@ -22,6 +22,9 @@ func NewPropertyRepository(ctx context.Context, q *pgdb.Queries) model.PropertyR
 }
 
 func (r *propertyRepository) Put(id string, value string) error {
+	if r.queries == nil {
+		return nil
+	}
 	return r.queries.PutProperty(r.ctx, pgdb.PutPropertyParams{
 		ID:    id,
 		Value: value,
@@ -29,6 +32,9 @@ func (r *propertyRepository) Put(id string, value string) error {
 }
 
 func (r *propertyRepository) Get(id string) (string, error) {
+	if r.queries == nil {
+		return "", model.ErrNotFound
+	}
 	val, err := r.queries.GetProperty(r.ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -40,6 +46,9 @@ func (r *propertyRepository) Get(id string) (string, error) {
 }
 
 func (r *propertyRepository) Delete(id string) error {
+	if r.queries == nil {
+		return nil
+	}
 	return r.queries.DeleteProperty(r.ctx, id)
 }
 
