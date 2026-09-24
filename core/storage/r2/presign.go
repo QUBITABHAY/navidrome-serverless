@@ -13,7 +13,8 @@ import (
 
 // IsR2Path reports whether a given path is an R2/S3 object path or if R2 streaming is active.
 func IsR2Path(path string) bool {
-	if strings.HasPrefix(path, "r2://") || strings.HasPrefix(path, "s3://") {
+	if strings.HasPrefix(path, "r2://") || strings.HasPrefix(path, "r2:/") ||
+		strings.HasPrefix(path, "s3://") || strings.HasPrefix(path, "s3:/") {
 		return true
 	}
 	return conf.Server.R2.EnablePresignedStream && conf.Server.R2.Bucket != ""
@@ -22,11 +23,16 @@ func IsR2Path(path string) bool {
 // SplitBucketKey parses a path or URI into bucket and object key.
 func SplitBucketKey(rawPath string) (bucket string, key string) {
 	clean := CleanKey(rawPath)
-	if strings.HasPrefix(rawPath, "r2://") || strings.HasPrefix(rawPath, "s3://") {
-		// Format: r2://my-bucket/path/to/song.mp3
+	hasSchema := strings.HasPrefix(rawPath, "r2://") || strings.HasPrefix(rawPath, "r2:/") ||
+		strings.HasPrefix(rawPath, "s3://") || strings.HasPrefix(rawPath, "s3:/")
+
+	if hasSchema {
 		parts := strings.SplitN(clean, "/", 2)
 		if len(parts) == 2 {
 			return parts[0], parts[1]
+		}
+		if conf.Server.R2.Bucket != "" {
+			return conf.Server.R2.Bucket, clean
 		}
 		return parts[0], ""
 	}

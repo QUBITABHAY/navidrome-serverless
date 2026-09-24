@@ -49,3 +49,4 @@ zz_*_test.go
 /plugins/testdata/.wazero-cache/
 /plugins/testdata/*.stage/
 .vercel
+.env*

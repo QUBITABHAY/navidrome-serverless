@@ -132,7 +132,9 @@ func DefaultPresignClient(ctx context.Context) (*s3.PresignClient, error) {
 // CleanKey removes schema prefixes and leading slashes from a path.
 func CleanKey(path string) string {
 	path = strings.TrimPrefix(path, "r2://")
+	path = strings.TrimPrefix(path, "r2:/")
 	path = strings.TrimPrefix(path, "s3://")
+	path = strings.TrimPrefix(path, "s3:/")
 	path = strings.TrimPrefix(path, "/")
 	return path
 }

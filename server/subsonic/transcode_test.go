@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/navidrome/navidrome/conf"
 	"github.com/navidrome/navidrome/core/ffmpeg"
 	"github.com/navidrome/navidrome/core/stream"
 	"github.com/navidrome/navidrome/model"
@@ -545,6 +546,27 @@ var _ = Describe("Transcode endpoints", func() {
 			Expect(fakeStreamer.captured.BitDepth).To(Equal(16))
 			Expect(fakeStreamer.captured.Channels).To(Equal(2))
 			Expect(fakeStreamer.captured.Offset).To(Equal(10))
+		})
+
+		It("redirects to presigned R2 URL when file is stored in R2", func() {
+			conf.Server.R2.EnablePresignedStream = true
+			conf.Server.R2.Bucket = "my-bucket"
+			conf.Server.R2.PublicURL = "https://cdn.example.com"
+			DeferCleanup(func() {
+				conf.Server.R2.EnablePresignedStream = false
+				conf.Server.R2.Bucket = ""
+				conf.Server.R2.PublicURL = ""
+			})
+
+			mockMFRepo.SetData(model.MediaFiles{{ID: "r2-song", Path: "r2://my-bucket/music/song.m4a", Suffix: "m4a"}})
+			mockTD.resolvedReq = stream.Request{Format: "raw"}
+
+			r := newGetRequest("mediaId=r2-song", "mediaType=song", "transcodeParams=valid-token")
+			resp, err := router.GetTranscodeStream(w, r)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(resp).To(BeNil())
+			Expect(w.Code).To(Equal(http.StatusFound))
+			Expect(w.Header().Get("Location")).To(Equal("https://cdn.example.com/music/song.m4a"))
 		})
 	})
 

@@ -15,7 +15,9 @@ func TestCleanKey(t *testing.T) {
 		expected string
 	}{
 		{"r2://bucket/music/track.mp3", "bucket/music/track.mp3"},
+		{"r2:/bucket/music/track.mp3", "bucket/music/track.mp3"},
 		{"s3://bucket/music/track.mp3", "bucket/music/track.mp3"},
+		{"s3:/bucket/music/track.mp3", "bucket/music/track.mp3"},
 		{"/music/track.mp3", "music/track.mp3"},
 		{"music/track.mp3", "music/track.mp3"},
 	}
@@ -37,7 +39,9 @@ func TestSplitBucketKey(t *testing.T) {
 		expectedKey    string
 	}{
 		{"r2://my-bucket/artist/album/song.mp3", "my-bucket", "artist/album/song.mp3"},
+		{"r2:/my-bucket/artist/album/song.mp3", "my-bucket", "artist/album/song.mp3"},
 		{"s3://cloud-music/album/song.flac", "cloud-music", "album/song.flac"},
+		{"s3:/cloud-music/album/song.flac", "cloud-music", "album/song.flac"},
 		{"artist/album/song.mp3", "default-bucket", "artist/album/song.mp3"},
 		{"/artist/album/song.mp3", "default-bucket", "artist/album/song.mp3"},
 	}
@@ -58,8 +62,14 @@ func TestIsR2Path(t *testing.T) {
 	if !IsR2Path("r2://my-bucket/song.mp3") {
 		t.Errorf("expected r2:// to be recognized as R2 path")
 	}
+	if !IsR2Path("r2:/my-bucket/song.mp3") {
+		t.Errorf("expected r2:/ to be recognized as R2 path")
+	}
 	if !IsR2Path("s3://my-bucket/song.mp3") {
 		t.Errorf("expected s3:// to be recognized as R2 path")
+	}
+	if !IsR2Path("s3:/my-bucket/song.mp3") {
+		t.Errorf("expected s3:/ to be recognized as R2 path")
 	}
 	if IsR2Path("/local/path/song.mp3") {
 		t.Errorf("expected local path NOT to be recognized when presigned stream is disabled")

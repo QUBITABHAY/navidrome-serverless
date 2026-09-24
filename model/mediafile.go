@@ -251,6 +251,11 @@ func (mf MediaFile) IsEquivalent(other MediaFile) bool {
 }
 
 func (mf MediaFile) AbsolutePath() string {
+	if strings.HasPrefix(mf.Path, "r2://") || strings.HasPrefix(mf.Path, "r2:/") ||
+		strings.HasPrefix(mf.Path, "s3://") || strings.HasPrefix(mf.Path, "s3:/") ||
+		strings.HasPrefix(mf.Path, "http://") || strings.HasPrefix(mf.Path, "https://") {
+		return mf.Path
+	}
 	return filepath.Join(mf.LibraryPath, mf.Path)
 }
 

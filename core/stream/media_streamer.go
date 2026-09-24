@@ -15,6 +15,7 @@ import (
 	"github.com/navidrome/navidrome/conf"
 	"github.com/navidrome/navidrome/consts"
 	"github.com/navidrome/navidrome/core/ffmpeg"
+	"github.com/navidrome/navidrome/core/storage/r2"
 	"github.com/navidrome/navidrome/log"
 	"github.com/navidrome/navidrome/model"
 	"github.com/navidrome/navidrome/model/request"
@@ -88,6 +89,21 @@ func (ms *mediaStreamer) NewStream(ctx context.Context, mf *model.MediaFile, req
 			"requestBitrate", req.BitRate, "requestFormat", req.Format, "requestOffset", req.Offset,
 			"originalBitrate", mf.BitRate, "originalFormat", mf.Suffix,
 			"selectedBitrate", bitRate, "selectedFormat", format)
+		if r2.IsR2Path(filePath) || r2.IsR2Path(mf.Path) {
+			targetPath := filePath
+			if !r2.IsR2Path(targetPath) {
+				targetPath = mf.Path
+			}
+			bucket, key := r2.SplitBucketKey(targetPath)
+			if f, err := r2.OpenFile(ctx, bucket, key); err == nil {
+				s.ReadCloser = f
+				s.Seeker = f
+				s.format = mf.Suffix
+				return s, nil
+			} else {
+				log.Warn(ctx, "Failed to open R2 file directly, falling back to os.Open", "bucket", bucket, "key", key, err)
+			}
+		}
 		f, err := os.Open(filePath)
 		if err != nil {
 			return nil, err

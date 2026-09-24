@@ -164,3 +164,13 @@ func (f *r2File) Close() error {
 var _ fs.File = (*r2File)(nil)
 var _ io.Seeker = (*r2File)(nil)
 var _ io.ReaderAt = (*r2File)(nil)
+var _ io.ReadSeekCloser = (*r2File)(nil)
+
+// OpenFile opens an S3/R2 object and returns an io.ReadSeekCloser.
+func OpenFile(ctx context.Context, bucket, key string) (io.ReadSeekCloser, error) {
+	client, err := DefaultClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return newR2File(ctx, client, bucket, key)
+}

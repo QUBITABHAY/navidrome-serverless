@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"time"
 
 	"github.com/navidrome/navidrome/core/ffmpeg"
+	"github.com/navidrome/navidrome/core/storage/r2"
 	"github.com/navidrome/navidrome/core/stream"
 	"github.com/navidrome/navidrome/log"
 	"github.com/navidrome/navidrome/model"
@@ -422,6 +424,23 @@ func (api *Router) GetTranscodeStream(w http.ResponseWriter, r *http.Request) (*
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
 		return nil, nil
+	}
+
+	// If streaming raw audio and R2 presigned streaming is available, redirect directly to Cloudflare R2
+	if (streamReq.Format == "raw" || streamReq.Format == "" || streamReq.Format == mf.Suffix) && (r2.IsR2Path(mf.Path) || r2.IsR2Path(mf.AbsolutePath())) {
+		streamPath := mf.Path
+		if !r2.IsR2Path(streamPath) {
+			streamPath = mf.AbsolutePath()
+		}
+		if r2URL, err := r2.PresignGet(ctx, streamPath, 2*time.Hour); err == nil && r2URL != "" {
+			log.Info(ctx, "Redirecting Subsonic transcode stream to R2 presigned URL", "id", mediaID, "title", mf.Title)
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Expose-Headers", "*")
+			http.Redirect(w, r, r2URL, http.StatusFound) //nolint:gosec // URL is generated server-side by S3 presigner
+			return nil, nil
+		} else if err != nil {
+			log.Warn(ctx, "Failed to presign R2 URL for transcode stream, falling back to direct streamer", "id", mediaID, err)
+		}
 	}
 
 	// Create stream
