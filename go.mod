@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.2
 	github.com/bmatcuk/doublestar/v4 v4.10.1
-	github.com/deluan/rest v0.0.0-20260913134927-47b21f30cc12
+	github.com/deluan/rest v1.0.1
 	github.com/deluan/sanitize v0.0.0-20241120162836-fdfd8fdfaa55
 	github.com/dexterlb/mpvipc v0.0.0-20260722094525-0cf47d745b36
 	github.com/dhowden/tag v0.0.0-20240417053706-3d75831295e8
