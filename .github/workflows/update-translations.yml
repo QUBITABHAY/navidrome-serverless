@@ -1,8 +1,6 @@
 name: POEditor import
 on:
   workflow_dispatch:
-  schedule:
-    - cron:  '0 10 * * *'
 jobs:
   update-translations:
     runs-on: ubuntu-latest
