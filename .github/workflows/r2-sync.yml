@@ -2,7 +2,7 @@ name: Cloudflare R2 Library Sync
 
 on:
   schedule:
-    - cron: "0 */12 * * *" # Runs every 12 hours
+    - cron: "0 0 * * *" # Runs every 24 hours
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 jobs:
