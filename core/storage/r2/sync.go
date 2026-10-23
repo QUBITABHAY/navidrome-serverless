@@ -124,6 +124,18 @@ func processR2AudioObject(
 	obj types.Object,
 	libraryID int32,
 ) error {
+	size := int64(0)
+	if obj.Size != nil {
+		size = *obj.Size
+	}
+
+	mediaFileID := id.NewHash("track", bucket, key)
+
+	// Incremental scan: skip tag extraction if track is already indexed with matching size
+	if existing, err := queries.GetMediaFileByID(ctx, mediaFileID); err == nil && !existing.Missing && existing.Size == size {
+		return nil
+	}
+
 	f, err := newR2File(ctx, client, bucket, key)
 	if err != nil {
 		return fmt.Errorf("opening r2 file for tag reading: %w", err)
@@ -140,7 +152,6 @@ func processR2AudioObject(
 	artistID := id.NewHash("artist", strings.ToLower(artist))
 	albumArtistID := id.NewHash("artist", strings.ToLower(albumArtist))
 	albumID := id.NewHash("album", albumArtistID, strings.ToLower(album))
-	mediaFileID := id.NewHash("track", bucket, key)
 
 	now := pgtype.Timestamptz{Time: time.Now(), Valid: true}
 	modTime := now
@@ -199,10 +210,6 @@ func processR2AudioObject(
 
 	// 6. Upsert MediaFile
 	suffix := strings.TrimPrefix(path.Ext(key), ".")
-	size := int64(0)
-	if obj.Size != nil {
-		size = *obj.Size
-	}
 
 	r2Path := fmt.Sprintf("r2://%s/%s", bucket, key)
 	_, err = queries.UpsertMediaFile(ctx, pgdb.UpsertMediaFileParams{
