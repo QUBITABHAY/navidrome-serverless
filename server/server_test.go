@@ -198,8 +198,8 @@ var _ = Describe("TLS support", func() {
 
 				// Wait for server to stop (with timeout)
 				select {
-				case <-errChan:
-					// Server stopped
+				case err := <-errChan:
+					Expect(err).NotTo(HaveOccurred())
 				case <-time.After(2 * time.Second):
 					Fail("Server did not stop in time")
 				}

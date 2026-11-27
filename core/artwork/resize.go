@@ -22,7 +22,7 @@ import (
 func init() {
 	conf.AddHook(func() {
 		// gen2brain/webp picks native vs WASM in its own init(), with no way to switch at
-		// runtime: 32-bit builds need the "nodynamic" tag (see Dockerfile) to force WASM.
+		// runtime: 32-bit builds need the "nodynamic" tag to force WASM.
 		if err := webp.Dynamic(); err != nil {
 			log.Debug("Artwork: Using WASM WebP encoder/decoder", "reason", err)
 		} else {

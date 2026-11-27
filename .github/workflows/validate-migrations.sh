@@ -12,7 +12,7 @@
 # Actions, emits an error annotation bound to the offending file so the message
 # also renders inline in the PR "Files changed" tab.
 #
-# Compares HEAD against $BASE_REF (default origin/master). Requires full history
+# Compares HEAD against $BASE_REF (default origin/main). Requires full history
 # (fetch-depth: 0 in CI).
 # -e is intentionally omitted: the script accumulates violations into $status
 # and must not exit on the first non-zero command (grep no-match, a false [[ ]]
@@ -21,7 +21,7 @@ set -uo pipefail
 export LC_ALL=C
 
 MIGRATIONS_DIR="db/migrations"
-BASE_REF="${BASE_REF:-origin/master}"
+BASE_REF="${BASE_REF:-origin/main}"
 NAME_RE='^[0-9]{14}_[a-z0-9_]+\.(sql|go)$'
 
 status=0

@@ -72,13 +72,13 @@ Trigger an on-demand scan via curl:
 curl -X POST "https://your-app.vercel.app/api/scan/r2?secret=YOUR_ND_SCAN_SECRET"
 ```
 
-### Option B: Automated GitHub Actions (Runs every 6 hours)
-In your GitHub repo, go to **Settings** > **Secrets and variables** > **Actions** and add the same environment variables. The workflow [`.github/workflows/r2-sync.yml`](.github/workflows/r2-sync.yml) will sync automatically every 6 hours or whenever you click "Run workflow".
+### Option B: Daily GitHub Actions scan
+Set the database, R2, and scan secrets in the GitHub `Production` environment. The workflow calls `navidrome-serverless.vercel.app` daily at 00:00 UTC or when you select **Run workflow**. For a different deployment, update the webhook URL in the workflow before enabling it. If the webhook fails, the runner uses the same database and bucket to run `scan-r2`. [R2 sync workflow](.github/workflows/r2-sync.yml)
 
 ### Option C: Local CLI
 Run directly on your computer:
 ```bash
-go run main.go scan-r2
+go run -tags netgo,sqlite_fts5 . scan-r2
 ```
 
 ---

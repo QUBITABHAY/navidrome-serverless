@@ -15,7 +15,7 @@ Standard Navidrome is designed for persistent virtual machines or home servers w
 
 | Feature                  | Standard Navidrome              | Navidrome Serverless                                                                                        |
 | :----------------------- | :------------------------------ | :---------------------------------------------------------------------------------------------------------- |
-| **Hosting**              | VPS, Docker, Raspberry Pi       | **Vercel Serverless Functions** (or AWS Lambda)                                                             |
+| **Hosting**              | VPS, Docker, Raspberry Pi       | **Vercel Serverless Functions**                                                                             |
 | **Database**             | Local SQLite (`navidrome.db`)   | **External / Serverless PostgreSQL** via type-safe [`sqlc`](https://sqlc.dev) & `pgx/v5` connection pooling |
 | **Audio Storage**        | Local hard drive / NFS / SMB    | **Cloudflare R2** or AWS S3 Object Storage                                                                  |
 | **Streaming Delivery**   | Server proxies all audio chunks | **Direct HTTP 302 Presigned Streaming** from Cloudflare Edge CDN ($0 egress, zero function timeouts)        |
@@ -91,14 +91,14 @@ For detailed step-by-step instructions, see the complete [**Deployment Guide (DE
 
 You can trigger metadata extraction in 3 convenient ways:
 
-- **Automated Cron**: Included GitHub Actions workflow ([`.github/workflows/r2-sync.yml`](.github/workflows/r2-sync.yml)) scans every 6 hours automatically.
+- GitHub Actions starts a scan daily at 00:00 UTC. If the webhook fails, the workflow runs the CLI. [R2 sync workflow](.github/workflows/r2-sync.yml)
 - **On-Demand Webhook**:
   ```bash
   curl -X POST "https://your-app.vercel.app/api/scan/r2?secret=YOUR_ND_SCAN_SECRET"
   ```
 - **Local CLI**:
   ```bash
-  go run main.go scan-r2
+  go run -tags netgo,sqlite_fts5 . scan-r2
   ```
 
 ---
@@ -119,6 +119,8 @@ make test
 # Generate sqlc models (if modifying PostgreSQL queries)
 sqlc generate
 ```
+
+After changing the player or its runtime dependencies, run `npm ci` and `npm run build` in `ui/`. Include the updated `ui/build/` assets in the change. Vercel compiles the Go handler with this bundle embedded.
 
 ---
 
