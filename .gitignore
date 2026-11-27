@@ -12,10 +12,10 @@ wiki
 TODO.md
 var
 navidrome.toml
-!release/linux/navidrome.toml
 master.zip
 testDB
 cache/*
+/api/cache/
 *.swp
 coverage.out
 dist
@@ -24,11 +24,10 @@ music.old
 *.db*
 .gitinfo
 docker-compose.yml
-!contrib/docker-compose.yml
 binaries
 navidrome-*
+!tests/navidrome-test.toml
 /ndpgen
-AGENTS.md
 .github/prompts
 .github/instructions
 .github/git-commit-instructions.md

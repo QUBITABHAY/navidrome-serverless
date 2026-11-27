@@ -14,7 +14,7 @@ body:
     attributes:
       label: "I confirm that:"
       options:
-        - label: I have searched the existing [open AND closed issues](https://github.com/navidrome/navidrome/issues?q=is%3Aissue) to see if an issue already exists for the bug I've encountered
+        - label: I have searched the existing [open and closed issues](https://github.com/QUBITABHAY/navidrome-serverless/issues?q=is%3Aissue) for this bug
           required: true
         - label: I'm using the latest version (your issue may have been fixed already)
           required: false
@@ -22,7 +22,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version of Navidrome are you running? (please try upgrading first, as your issue may have been fixed already).
+      description: Which commit or Vercel deployment are you running?
     validations:
       required: true
   - type: textarea
@@ -65,21 +65,20 @@ body:
   - type: dropdown
     id: distribution
     attributes:
-      label: How Navidrome is installed?
+      label: Where did the issue occur?
       multiple: false
       options:
-        - Docker
-        - Binary (from downloads page)
-        - Package
-        - Built from sources
+        - Vercel deployment
+        - GitHub Actions R2 sync
+        - Local development or CLI
     validations:
       required: true
   - type: textarea
     id: config
     attributes:
       label: Configuration
-      description: Please copy and paste your `navidrome.toml` (and/or `docker-compose.yml`) configuration. This will be automatically formatted into code, so no need for backticks.
-      render: toml
+      description: List the relevant configuration settings. Redact credentials, connection strings, and scan secrets.
+      render: text
   - type: textarea
     id: logs
     attributes:

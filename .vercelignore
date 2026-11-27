@@ -1,6 +1,7 @@
 # Dependencies & caches
 ui/node_modules
 .cache
+api/cache
 tmp
 binaries
 bin
@@ -14,7 +15,7 @@ music
 *.log
 
 # Build & CI tools
-release
+.devcontainer
 .github
 docs
 .vscode
